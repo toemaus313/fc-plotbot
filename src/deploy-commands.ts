@@ -1,0 +1,32 @@
+import { REST, Routes } from 'discord.js';
+import dotenv from 'dotenv';
+import { fcRouteCommand } from './commands';
+
+dotenv.config();
+
+const token = process.env.DISCORD_TOKEN;
+const clientId = process.env.CLIENT_ID;
+
+if (!token || !clientId) {
+  console.error('DISCORD_TOKEN and CLIENT_ID must be set in .env file');
+  process.exit(1);
+}
+
+const commands = [fcRouteCommand.toJSON()];
+
+const rest = new REST().setToken(token);
+
+(async () => {
+  try {
+    console.log(`Started refreshing ${commands.length} application (/) commands.`);
+
+    // Register commands globally (may take up to 1 hour to propagate)
+    const data = await rest.put(Routes.applicationCommands(clientId), {
+      body: commands,
+    }) as any[];
+
+    console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+  } catch (error) {
+    console.error('Error deploying commands:', error);
+  }
+})();
